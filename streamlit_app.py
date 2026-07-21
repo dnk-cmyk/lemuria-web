@@ -14,7 +14,6 @@ st.set_page_config(
 # Injection CSS : Slate 950 (#020617), Émeraude (#10B981), Bleu (#0052FF), Ambre (#F59E0B)
 st.markdown("""
 <style>
-    /* Fond de scène d'élite & Dégradé radial */
     .stApp {
         background: radial-gradient(circle at 50% 0%, #0F172A 0%, #020617 100%) !important;
         color: #F8FAFC !important;
@@ -25,7 +24,6 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* Cartes & Conteneurs avec arrondi de 16px (rounded-2xl) */
     .stCard, div[data-testid="stExpander"], div[data-testid="stVerticalBlock"] > div {
         border-radius: 16px !important;
     }
@@ -39,7 +37,6 @@ st.markdown("""
         backdrop-filter: blur(8px);
     }
 
-    /* Boutons d'Action Principaux (Bleu & Émeraude) */
     .stButton>button {
         background-color: #0052FF !important;
         color: #FFFFFF !important;
@@ -54,14 +51,12 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
     }
 
-    /* Effet Miroir pour la Caméra */
     video {
         transform: scaleX(-1) !important;
         border-radius: 16px !important;
         border: 2px solid #10B981 !important;
     }
 
-    /* Boîte d'Astuce Ambre */
     .box-tip {
         background-color: rgba(245, 158, 11, 0.1);
         border: 1px solid #F59E0B;
@@ -84,6 +79,9 @@ if not API_KEY:
     st.stop()
 
 client = genai.Client(api_key=API_KEY)
+
+# Modèle officiel recommandé pour la vitesse et la vision
+MODEL_NAME = "gemini-2.5-flash"
 
 # Tracking Analytics Backend
 if "stats" not in st.session_state:
@@ -150,7 +148,6 @@ with tab_topmodel:
     st.markdown('<div class="card-luxury">', unsafe_allow_html=True)
     st.write("### 1. Sélection du mode de traitement")
     
-    # Sous-options segmentées
     sub_mode = st.radio(
         "Mode d'importation :",
         ["📁 Uploader mon produit", "📸 Prendre un selfie"],
@@ -173,66 +170,66 @@ with tab_topmodel:
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # VISUALISATION COMPARATIVE EN DOUBLE COLONNE (AVANT / APRÈS)
     if image_input is not None:
         st.write("---")
         if st.button("✨ Générer les Prompts Studio (Gemini)"):
             st.session_state.stats["top_models"] += 1
             
             with st.spinner("Traitement par le moteur Gemini en cours..."):
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[image_input, "Génère le Prompt 1 (débutant par 1-) et le Prompt 2 (débutant par 2-) pour la mise en situation gymnase."],
-                    config=types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTIONS)
-                )
-                
-                # SÉPARATION EN DOUBLE COLONNE
-                col_left, col_right = st.columns(2)
-                
-                with col_left:
-                    st.markdown('<div class="card-luxury">', unsafe_allow_html=True)
-                    st.write("#### 🖼️ Colonne Gauche (Image 1 - Input)")
-                    st.image(image_input, use_container_width=True)
-                    st.write("**Prompt 1- (Scène d'origine) :**")
-                    st.code(response.text.split("2-")[0] if "2-" in response.text else response.text, language="markdown")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                try:
+                    response = client.models.generate_content(
+                        model=MODEL_NAME,
+                        contents=[image_input, "Génère le Prompt 1 (débutant par 1-) et le Prompt 2 (débutant par 2-) pour la mise en situation gymnase."],
+                        config=types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTIONS)
+                    )
                     
-                with col_right:
-                    st.markdown('<div class="card-luxury">', unsafe_allow_html=True)
-                    st.write("#### ✨ Colonne Droite (Image 2 - Output)")
-                    st.image(image_input, caption="Projection Rendu Gymnase Haut de Gamme", use_container_width=True)
-                    st.write("**Prompt 2- (Scène Gymnase Final) :**")
-                    prompt_2_text = "2-" + response.text.split("2-")[1] if "2-" in response.text else response.text
-                    st.code(prompt_2_text, language="markdown")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    col_left, col_right = st.columns(2)
+                    
+                    with col_left:
+                        st.markdown('<div class="card-luxury">', unsafe_allow_html=True)
+                        st.write("#### 🖼️ Colonne Gauche (Image 1 - Input)")
+                        st.image(image_input, use_container_width=True)
+                        st.write("**Prompt 1- (Scène d'origine) :**")
+                        st.code(response.text.split("2-")[0] if "2-" in response.text else response.text, language="markdown")
+                        st.markdown('</div>', unsafe_allow_html=True)
+                        
+                    with col_right:
+                        st.markdown('<div class="card-luxury">', unsafe_allow_html=True)
+                        st.write("#### ✨ Colonne Droite (Image 2 - Output)")
+                        st.image(image_input, caption="Projection Rendu Gymnase Haut de Gamme", use_container_width=True)
+                        st.write("**Prompt 2- (Scène Gymnase Final) :**")
+                        prompt_2_text = "2-" + response.text.split("2-")[1] if "2-" in response.text else response.text
+                        st.code(prompt_2_text, language="markdown")
+                        st.markdown('</div>', unsafe_allow_html=True)
 
-                # PASSERELLE D'EXPORTATION VERS LES MOTEURS VIDÉO
-                st.markdown("""
-                <div class="box-tip">
-                    💡 <b>Astuce :</b> Copiez les prompts ci-dessus dans votre bloc-notes avant d'ouvrir votre moteur vidéo.
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.write("#### 🚀 Générer la vidéo sur nos plateformes partenaires :")
-                btn_flow, btn_pik = st.columns(2)
-                
-                with btn_flow:
                     st.markdown("""
-                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.labs.whisk" target="_blank">
-                        <button style="width:100%; background-color:#0052FF; color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
-                            🚀 Ouvrir Google Flow Beta
-                        </button>
-                    </a>
+                    <div class="box-tip">
+                        💡 <b>Astuce :</b> Copiez les prompts ci-dessus dans votre bloc-notes avant d'ouvrir votre moteur vidéo.
+                    </div>
                     """, unsafe_allow_html=True)
                     
-                with btn_pik:
-                    st.markdown("""
-                    <a href="https://bit.ly/piksverse" target="_blank">
-                        <button style="width:100%; background-color:#10B981; color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
-                            ✨ Ouvrir PikverseAI
-                        </button>
-                    </a>
-                    """, unsafe_allow_html=True)
+                    st.write("#### 🚀 Générer la vidéo sur nos plateformes partenaires :")
+                    btn_flow, btn_pik = st.columns(2)
+                    
+                    with btn_flow:
+                        st.markdown("""
+                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.labs.whisk" target="_blank">
+                            <button style="width:100%; background-color:#0052FF; color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
+                                🚀 Ouvrir Google Flow Beta
+                            </button>
+                        </a>
+                        """, unsafe_allow_html=True)
+                        
+                    with btn_pik:
+                        st.markdown("""
+                        <a href="https://bit.ly/piksverse" target="_blank">
+                            <button style="width:100%; background-color:#10B981; color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
+                                ✨ Ouvrir PikverseAI
+                            </button>
+                        </a>
+                        """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Une erreur est survenue lors du traitement par l'API : {e}")
 
 # TAB STORYBOARD
 with tab_sb:
@@ -242,12 +239,15 @@ with tab_sb:
         st.session_state.stats["storyboards"] += 1
         img_sb = Image.open(sb_file)
         with st.spinner("Génération..."):
-            res = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[img_sb, "Génère un storyboard vidéo détaillé en 4 scènes avec prompts en anglais."],
-                config=types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTIONS)
-            )
-            st.write(res.text)
+            try:
+                res = client.models.generate_content(
+                    model=MODEL_NAME,
+                    contents=[img_sb, "Génère un storyboard vidéo détaillé en 4 scènes avec prompts en anglais."],
+                    config=types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTIONS)
+                )
+                st.write(res.text)
+            except Exception as e:
+                st.error(f"Erreur API lors de la génération du storyboard : {e}")
 
 # TAB BOUTIQUE
 with tab_shop:
