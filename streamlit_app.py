@@ -80,9 +80,6 @@ if not API_KEY:
 
 client = genai.Client(api_key=API_KEY)
 
-# Modèle officiel recommandé pour la vitesse et la vision
-MODEL_NAME = "gemini-2.5-flash"
-
 # Tracking Analytics Backend
 if "stats" not in st.session_state:
     st.session_state.stats = {"top_models": 0, "storyboards": 0, "clics_affiliations": 0}
@@ -97,6 +94,29 @@ Ton rôle est d'analyser l'image source (produit ou selfie) pour générer 2 pro
 1. Prompt 1 (débutant obligatoirement par '1-') : Décris avec minutie et précision la scène d'origine (sujet, posture, vêtements, arrière-plan, lumière).
 2. Prompt 2 (débutant obligatoirement par '2-') : Détaille la scène finale de mise en situation haut de gamme dans un gymnase stylé et luxueux, prêt pour la création vidéo.
 """
+
+# --- FONCTION DE SECOURS (FALLBACK) POUR LES MODÈLES GEMINI ---
+def call_gemini_with_fallback(client_instance, contents_payload, sys_instruction):
+    models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash"
+    ]
+    
+    last_exception = None
+    for model_name in models_to_try:
+        try:
+            res = client_instance.models.generate_content(
+                model=model_name,
+                contents=contents_payload,
+                config=types.GenerateContentConfig(system_instruction=sys_instruction)
+            )
+            return res
+        except Exception as err:
+            last_exception = err
+            continue
+            
+    raise last_exception
 
 # --- 3. EN-TÊTE & ACCÈS VIP ---
 col_logo, col_auth = st.columns([3, 1])
@@ -177,10 +197,10 @@ with tab_topmodel:
             
             with st.spinner("Traitement par le moteur Gemini en cours..."):
                 try:
-                    response = client.models.generate_content(
-                        model=MODEL_NAME,
-                        contents=[image_input, "Génère le Prompt 1 (débutant par 1-) et le Prompt 2 (débutant par 2-) pour la mise en situation gymnase."],
-                        config=types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTIONS)
+                    response = call_gemini_with_fallback(
+                        client,
+                        [image_input, "Génère le Prompt 1 (débutant par 1-) et le Prompt 2 (débutant par 2-) pour la mise en situation gymnase."],
+                        SYSTEM_INSTRUCTIONS
                     )
                     
                     col_left, col_right = st.columns(2)
@@ -240,10 +260,10 @@ with tab_sb:
         img_sb = Image.open(sb_file)
         with st.spinner("Génération..."):
             try:
-                res = client.models.generate_content(
-                    model=MODEL_NAME,
-                    contents=[img_sb, "Génère un storyboard vidéo détaillé en 4 scènes avec prompts en anglais."],
-                    config=types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTIONS)
+                res = call_gemini_with_fallback(
+                    client,
+                    [img_sb, "Génère un storyboard vidéo détaillé en 4 scènes avec prompts en anglais."],
+                    SYSTEM_INSTRUCTIONS
                 )
                 st.write(res.text)
             except Exception as e:
