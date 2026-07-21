@@ -75,7 +75,7 @@ export default function App() {
   return (
     <div id="lemuria-root" className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans selection:bg-blue-600/30 selection:text-blue-200">
       
-      { Header component }
+      { "Header component" }
       <Header 
         currentUser={currentUser}
         onLogin={handleLogin}
@@ -85,20 +85,20 @@ export default function App() {
         ecommerceUrl={settings?.ecommerceUrl}
       />
 
-      { Main Container }
+      { "Main Container" }
       <main className="flex-grow">
         
-        { Section 1: Hero Banner }
+        { "Section 1: Hero Banner" }
         <section id="hero" className="relative py-12 sm:py-20 overflow-hidden bg-slate-950/40">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.08),transparent_50%)] pointer-events-none" />
           
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               
-              { Hero Text Content (7 Columns) }
+              {" Hero Text Content" ("7 Columns") }
               <div className="lg:col-span-7 space-y-6 text-left">
                 
-                { Micro badge }
+                {"Micro badge" }
                 <div id="hero-badge" className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400 border border-blue-500/20">
                   <Zap className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
                   "<span>Hub Central d'IA gratuit à Madagascar</span>"
@@ -112,7 +112,7 @@ export default function App() {
                   Générez vos storyboards, transformez vos images en prompts exploitables et accédez aux meilleures IA partenaires en un seul endroit. Conçu pour propulser les créateurs, indépendants et entrepreneurs locaux.
                 </p>
 
-                { Call to action buttons }
+                { "Call to action buttons" }
                 <div className="flex flex-wrap items-center gap-4 pt-2">
                   <button
                     id="hero-cta-workspace"
@@ -131,7 +131,7 @@ export default function App() {
                   </button>
                 </div>
 
-                { Local Mada feature points }
+                { "Local Mada feature points" }
                 <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-900">
                   <div>
                     <span className="text-xs font-bold text-slate-500 block uppercase font-mono">Inférence</span>
@@ -149,14 +149,14 @@ export default function App() {
 
               </div>
 
-              { Hero Graphic Card (5 Columns) }
+              { "Hero Graphic Card" ("5 Columns") }
               <div className="lg:col-span-5 flex justify-center">
                 <div id="hero-feature-illustration-card" className="relative h-72 w-72 sm:h-96 sm:w-96 rounded-3xl bg-gradient-to-tr from-slate-900 to-slate-950 p-6 flex flex-col justify-between text-white shadow-2xl border border-slate-800/80 overflow-hidden group">
                   { Decorative mesh }
                   <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-700" />
                   <div className="absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-2xl group-hover:bg-indigo-500/20 transition-all duration-700" />
 
-                  { Header info }
+                  { "Header info" }
                   <div className="flex justify-between items-start relative z-10">
                     <span className="flex items-center gap-1.5 text-[10px] font-mono bg-white/10 px-2.5 py-0.5 rounded-full">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -165,7 +165,7 @@ export default function App() {
                     <Layers className="h-5 w-5 text-blue-400" />
                   </div>
 
-                  { Central design }
+                  { "Central design" }
                   <div className="space-y-3 relative z-10">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
                       <Sparkles className="h-6 w-6" />
@@ -176,7 +176,7 @@ export default function App() {
                     </p>
                   </div>
 
-                  { Attribution card footer }
+                  { "Attribution card footer" }
                   <div className="border-t border-white/5 pt-3 text-left relative z-10 flex items-center justify-between">
                     <span className="text-[10px] font-mono text-slate-500">PROMPT ROUTER MADA v2.4</span>
                     <Globe className="h-4 w-4 text-slate-600" />
@@ -188,20 +188,20 @@ export default function App() {
           </div>
         </section>
 
-        { Section 2: Carousel of Madagascar social networks }
+        { "Section 2": "Carousel of Madagascar social networks" }
         <Carousel 
           carouselItems={settings?.carousel || []} 
           onTrackClick={(id) => trackEvent("affiliate_click", id)}
         />
 
-        { Section 3: Espace de travail interactif (Workspace with Gemini vision engines) }
+        { "Section 3": "Espace de travail interactif (Workspace with Gemini vision engine" }
         <Workspace 
           currentUser={currentUser} 
           activePartners={settings?.partners || { google_flow: true, pikverse: true, midjourney_flux: true }}
           onTrackEvent={trackEvent}
         />
 
-        { Section 4: Boutique de Prompts & Promotion du mois }
+        { "Section 4": "Boutique de Prompts & Promotion du mois" }
         <div id="boutique">
           <BoutiquePrompts 
             promoCode={settings?.promoCode || "LEMURIA2026"}
@@ -210,7 +210,7 @@ export default function App() {
           />
         </div>
 
-        { Section 5: Blog d'Actualité IA & Tech }
+        { "Section 5": "Blog d'Actualité IA & Tech" }
         <div id="blog">
           <BlogIA 
             articles={settings?.blogArticles || []}
@@ -220,7 +220,7 @@ export default function App() {
 
       </main>
 
-      { Footer Section }
+      { "Footer Section" }
       <footer id="main-footer" className="bg-slate-950 text-slate-450 py-10 border-t border-slate-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center sm:text-left space-y-6 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
           
@@ -248,7 +248,7 @@ export default function App() {
         </div>
       </footer>
 
-      { Overlay Admin Dashboard }
+      { "Overlay Admin Dashboard" }
       {showAdmin && (
         <AdminDashboard 
           onClose={() => setShowAdmin(false)}
@@ -256,7 +256,7 @@ export default function App() {
         />
       )}
 
-      { Active Agent Chibi Assistant }
+      { "Active Agent Chibi Assistant" }
       <AgentAide />
 
     </div>
