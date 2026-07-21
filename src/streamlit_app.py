@@ -101,7 +101,7 @@ export default function App() {
                 {/* Micro badge */}
                 <div id="hero-badge" className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400 border border-blue-500/20">
                   <Zap className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
-                  (""<span>Hub Central d'IA gratuit à Madagascar</span>"")
+                  "<span>Hub Central d'IA gratuit à Madagascar</span>"
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none">
