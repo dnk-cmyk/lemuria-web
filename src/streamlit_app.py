@@ -109,7 +109,7 @@ export default function App() {
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-400 font-medium max-w-xl leading-relaxed">
-                  Générez vos storyboards, transformez vos images en prompts exploitables et accédez aux meilleures IA partenaires en un seul endroit. Conçu pour propulser les créateurs, indépendants et entrepreneurs locaux.
+                  "Générez vos storyboards, transformez vos images en prompts exploitables et accédez aux meilleures IA partenaires en un seul endroit. Conçu pour propulser les créateurs, indépendants et entrepreneurs locaux."
                 </p>
 
                 { "Call to action buttons" }
@@ -172,7 +172,7 @@ export default function App() {
                     </div>
                     <h3 className="text-xl font-bold tracking-tight">Optimisation Multi-Modèle</h3>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      L'intelligence de Lemuria traduit vos concepts d'images en découpages scéniques pour Google Flow Beta et PikverseAI en quelques secondes.
+                      "L'intelligence de Lemuria traduit vos concepts d'images en découpages scéniques pour Google Flow Beta et PikverseAI en quelques secondes."
                     </p>
                   </div>
 
@@ -232,16 +232,16 @@ export default function App() {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1 max-w-sm">
-              Plateforme d'IA centralisée, épurée et gratuite, conçue comme le hub de référence pour les créateurs de Madagascar.
+              "Plateforme d'IA centralisée, épurée et gratuite, conçue comme le hub de référence pour les créateurs de Madagascar."
             </p>
           </div>
 
           <div className="text-center sm:text-right space-y-1">
             <p className="text-xs">
-              Hub IA Lemuria © 2026. Tous droits réservés. Service 100% Gratuit.
+              "Hub IA Lemuria © 2026. Tous droits réservés. Service 100% Gratuit."
             </p>
             <p className="text-[10px] font-mono text-slate-600">
-              Masoivoho Lemuria • Tananarive, Madagascar
+              "Masoivoho Lemuria • Tananarive, Madagascar"
             </p>
           </div>
 
