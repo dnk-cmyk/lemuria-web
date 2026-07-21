@@ -1,0 +1,6 @@
+{
+  "name": "Hub IA Lemuria",
+  "description": "Le hub d'intelligence artificielle épuré et gratuit pour les créateurs de contenu, indépendants et entrepreneurs à Madagascar.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

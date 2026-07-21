@@ -1,0 +1,36 @@
+{
+  "promoCode": "LEMURIA2026",
+  "promoDiscount": "-50% & Accès VIP",
+  "carousel": [
+    {
+      "id": "facebook",
+      "name": "Facebook (Communauté)",
+      "url": "https://web.facebook.com/profile.php?id=61576412781829"
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok (Tutos Mada)",
+      "url": "https://lemuria.mg/ref/tiktok"
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube (Formations)",
+      "url": "https://lemuria.mg/ref/youtube"
+    },
+    {
+      "id": "instagram",
+      "name": "Instagram (Showcase)",
+      "url": "https://lemuria.mg/ref/instagram"
+    },
+    {
+      "id": "telegram",
+      "name": "Groupe VIP (Telegram)",
+      "url": "https://lemuria.mg/ref/telegram"
+    }
+  ],
+  "partners": {
+    "google_flow": true,
+    "pikverse": true,
+    "midjourney_flux": true
+  }
+}
