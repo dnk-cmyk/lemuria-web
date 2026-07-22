@@ -11,176 +11,137 @@ export default function Carousel({ carouselItems, onTrackClick }: CarouselProps)
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Content for each of the 5 social slides
-  const slidesContent = [
+  const slidesContent = SLIDES = [
     {
-      id: "facebook",
-      title: "Communauté Facebook Lemuria",
-      tagline: "Salama e! Rejoins 15,000+ créateurs à Madagascar",
-      description: "Partage tes créations de storyboards, pose tes questions en malagasy ou français, et collabore avec la plus grande communauté d'IA locale.",
-      bgColor: "from-blue-600 to-indigo-700",
-      icon: Facebook,
-      badge: "Entraide & Partage"
+        "id": "facebook",
+        "title": "Communauté Facebook Lemuria",
+        "tagline": "Salama e! Rejoins 15,000+ créateurs à Madagascar",
+        "description": "Partage tes créations de storyboards, pose tes questions en malagasy ou français, et collabore avec la plus grande communauté d'IA locale.",
+        "gradient": "linear-gradient(135deg, #2563eb, #4338ca)",
+        "icon": "📘",
+        "badge": "Entraide & Partage",
     },
     {
-      id: "tiktok",
-      title: "TikTok @lemuria_ia",
-      tagline: "Des astuces IA courtes et percutantes en 60s",
-      description: "Regarde nos tutoriels vidéo rapides pour maîtriser Google Flow Beta et PikverseAI. Astuces de création visuelle adaptées aux connexions locales.",
-      bgColor: "from-slate-900 to-purple-950",
-      icon: Video,
-      badge: "Tutos Mada & Trends"
+        "id": "tiktok",
+        "title": "TikTok @lemuria_ia",
+        "tagline": "Des astuces IA courtes et percutantes en 60s",
+        "description": "Regarde nos tutoriels vidéo rapides pour maîtriser Google Flow Beta et PikverseAI. Astuces de création visuelle adaptées aux connexions locales.",
+        "gradient": "linear-gradient(135deg, #0f172a, #581c87)",
+        "icon": "🎵",
+        "badge": "Tutos Mada & Trends",
     },
     {
-      id: "youtube",
-      title: "Chaîne YouTube Lemuria",
-      tagline: "Formations complètes et masterclasses gratuites",
-      description: "Apprends à concevoir des films IA complets, à monétiser tes prompts avec l'e-commerce et à piloter des pipelines de génération avancés.",
-      bgColor: "from-red-600 to-rose-700",
-      icon: Youtube,
-      badge: "Formations Officielles"
+        "id": "youtube",
+        "title": "Chaîne YouTube Lemuria",
+        "tagline": "Formations complètes et masterclasses gratuites",
+        "description": "Apprends à concevoir des films IA complets, à monétiser tes prompts avec l'e-commerce et à piloter des pipelines de génération avancés.",
+        "gradient": "linear-gradient(135deg, #dc2626, #be123c)",
+        "icon": "▶️",
+        "badge": "Formations Officielles",
     },
     {
-      id: "instagram",
-      title: "Instagram Showcase",
-      tagline: "Le temple du prompting haute-fidélité",
-      description: "Découvre les plus beaux chefs-d'œuvre visuels inspirés de Madagascar. Copie les recettes esthétiques et partage tes rendus avec le hashtag #LemuriaIA.",
-      bgColor: "from-pink-600 via-purple-600 to-orange-500",
-      icon: Instagram,
-      badge: "Inspiration Visuelle"
+        "id": "instagram",
+        "title": "Instagram Showcase",
+        "tagline": "Le temple du prompting haute-fidélité",
+        "description": "Découvre les plus beaux chefs-d'œuvre visuels inspirés de Madagascar. Copie les recettes esthétiques et partage tes rendus avec le hashtag #LemuriaIA.",
+        "gradient": "linear-gradient(135deg, #db2777, #9333ea, #f97316)",
+        "icon": "📷",
+        "badge": "Inspiration Visuelle",
     },
     {
-      id: "telegram",
-      title: "Groupe Privé VIP Telegram",
-      tagline: "Partage de prompts secrets & Accès VIP",
-      description: "Sois le premier informé de l'accès aux bêtas privées, reçois des codes promos exclusifs et échange directement avec le staff de Lemuria.",
-      bgColor: "from-cyan-500 to-blue-600",
-      icon: Send,
-      badge: "Accès Secret VIP"
-    }
-  ];
-
-  // Autoplay functionality
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % slidesContent.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [slidesContent.length]);
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + slidesContent.length) % slidesContent.length);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % slidesContent.length);
-  };
-
-  const handleSlideClick = (id: string, fallbackUrl: string) => {
-    // Find matching url from settings
-    const item = carouselItems.find((ci) => ci.id === id);
-    const url = item ? item.url : fallbackUrl;
-    
-    // Log click event quietly
-    onTrackClick(id);
-
-    // Open target url
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  return (
-    <section id="social-carousel-section" className="w-full py-8 bg-slate-50 border-y border-gray-100">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
-        <div className="text-center mb-6">
-          <h3 className="font-sans text-xs font-bold text-blue-600 uppercase tracking-widest">
-            Réseaux Lemuria Madagascar
-          </h3>
-          <p className="font-sans text-lg font-bold text-slate-800">
-            Propulsez vos compétences en rejoignant notre écosystème
-          </p>
-        </div>
-
-        <div className="relative overflow-hidden rounded-3xl shadow-xl shadow-slate-100 bg-white">
-          {/* Slides Container */}
-          <div 
-            className="flex transition-transform duration-700 ease-out h-[340px] sm:h-[280px]"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
-            {slidesContent.map((slide) => {
-              const IconComponent = slide.icon;
-              const configItem = carouselItems.find((ci) => ci.id === slide.id);
-              const targetUrl = configItem ? configItem.url : "#";
-
-              return (
-                <div 
-                  key={slide.id} 
-                  className="w-full flex-shrink-0 h-full p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 cursor-pointer"
-                  onClick={() => handleSlideClick(slide.id, targetUrl)}
-                >
-                  {/* Text Details */}
-                  <div className="flex-1 text-left space-y-3">
-                    <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800">
-                      {slide.badge}
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
-                      {slide.title}
-                    </h2>
-                    <p className="text-sm font-semibold text-blue-600">
-                      {slide.tagline}
-                    </p>
-                    <p className="text-xs sm:text-sm text-slate-500 max-w-xl">
-                      {slide.description}
-                    </p>
-                  </div>
-
-                  {/* Graphic Card on Right */}
-                  <div className={`w-full sm:w-64 h-32 sm:h-44 rounded-2xl bg-gradient-to-br ${slide.bgColor} flex flex-col items-center justify-center text-white relative shadow-md p-4 transition-transform hover:scale-[1.02]`}>
-                    <IconComponent className="h-12 w-12 mb-2 drop-shadow-md" />
-                    <span className="text-xs font-mono font-medium opacity-90 flex items-center gap-1">
-                      Rejoindre maintenant <ExternalLink className="h-3 w-3" />
-                    </span>
-                    <div className="absolute bottom-2 right-2 text-[9px] font-mono opacity-40">
-                      lemuria.mg/ref/{slide.id}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Navigation Controls */}
-          <button 
-            id="carousel-prev-btn"
-            onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white text-slate-700 hover:text-blue-600 transition-colors z-10"
-            aria-label="Slide précédente"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button 
-            id="carousel-next-btn"
-            onClick={(e) => { e.stopPropagation(); handleNext(); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white text-slate-700 hover:text-blue-600 transition-colors z-10"
-            aria-label="Slide suivante"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-
-          {/* Indicators / Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-y-0 -translate-x-1/2 flex gap-1.5 z-10">
-            {slidesContent.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
-                className={`h-2 rounded-full transition-all duration-300 ${currentIndex === idx ? "w-6 bg-blue-600" : "w-2 bg-slate-200"}`}
-                aria-label={`Aller au slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-
-        </div>
-
-      </div>
-    </section>
-  );
+        "id": "telegram",
+        "title": "Groupe Privé VIP Telegram",
+        "tagline": "Partage de prompts secrets & Accès VIP",
+        "description": "Sois le premier informé de l'accès aux bêtas privées, reçois des codes promos exclusifs et échange directement avec le staff de Lemuria.",
+        "gradient": "linear-gradient(135deg, #06b6d4, #2563eb)",
+        "icon": "✈️",
+        "badge": "Accès Secret VIP",
+    },
+]
+ 
+DEFAULT_URLS = {
+    "facebook": "#",
+    "tiktok": "#",
+    "youtube": "#",
+    "instagram": "#",
+    "telegram": "#",
 }
+ 
+ 
+def render_carousel(carousel_items, on_track_click):
+    """
+    Équivalent de <Carousel carouselItems onTrackClick />
+ 
+    Args:
+        carousel_items: liste de dicts {"id", "url", ...} venant des settings admin
+        on_track_click: fonction(partner_id) -> None
+    """
+    if "carousel_index" not in st.session_state:
+        st.session_state.carousel_index = 0
+ 
+    # Table de correspondance id -> url configurée par l'admin
+    url_map = {item["id"]: item["url"] for item in (carousel_items or []) if "id" in item}
+ 
+    idx = st.session_state.carousel_index
+    slide = SLIDES[idx]
+    target_url = url_map.get(slide["id"], DEFAULT_URLS.get(slide["id"], "#"))
+ 
+    st.markdown(
+        """
+        <div style="text-align:center; margin: 24px 0 16px 0;">
+            <p style="font-size:12px; font-weight:700; color:#2563eb; text-transform:uppercase;
+                      letter-spacing:0.05em;">Réseaux Lemuria Madagascar</p>
+            <p style="font-size:18px; font-weight:800; color:#0f172a; margin-top:4px;">
+                Propulsez vos compétences en rejoignant notre écosystème
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+ 
+    st.markdown(
+        f"""
+        <div style="border-radius:24px; overflow:hidden; background:white; box-shadow:0 20px 25px -5px rgba(0,0,0,0.08);
+                    padding: 32px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:24px;">
+            <div style="flex:1; min-width:260px; text-align:left;">
+                <span style="display:inline-flex; align-items:center; border-radius:9999px; background:#f1f5f9;
+                             padding:4px 12px; font-size:12px; font-weight:600; color:#1e293b;">{slide['badge']}</span>
+                <h2 style="font-size:26px; font-weight:800; color:#0f172a; margin:12px 0 4px 0;">{slide['title']}</h2>
+                <p style="font-size:14px; font-weight:600; color:#2563eb; margin:0 0 8px 0;">{slide['tagline']}</p>
+                <p style="font-size:13px; color:#64748b; max-width:520px;">{slide['description']}</p>
+            </div>
+            <a href="{target_url}" target="_blank" rel="noopener noreferrer"
+               style="text-decoration:none; width:240px; height:150px; border-radius:16px; background:{slide['gradient']};
+                      display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;
+                      position:relative; box-shadow:0 10px 15px -3px rgba(0,0,0,0.15);">
+                <span style="font-size:40px; margin-bottom:8px;">{slide['icon']}</span>
+                <span style="font-size:11px; font-family:monospace; opacity:0.9;">Rejoindre maintenant ↗</span>
+            </a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+ 
+    # Boutons de navigation + indicateurs (remplace les flèches ChevronLeft/Right et les dots)
+    nav_col1, dots_col, nav_col2 = st.columns([1, 6, 1])
+    with nav_col1:
+        if st.button("◀", key="carousel_prev_btn", use_container_width=True):
+            st.session_state.carousel_index = (idx - 1) % len(SLIDES)
+            st.rerun()
+    with dots_col:
+        dot_cols = st.columns(len(SLIDES))
+        for i, dot_col in enumerate(dot_cols):
+            with dot_col:
+                label = "●" if i == idx else "○"
+                if st.button(label, key=f"carousel_dot_{i}", use_container_width=True):
+                    st.session_state.carousel_index = i
+                    st.rerun()
+    with nav_col2:
+        if st.button("▶", key="carousel_next_btn", use_container_width=True):
+            st.session_state.carousel_index = (idx + 1) % len(SLIDES)
+            st.rerun()
+ 
+    # Enregistre le clic si on clique sur le lien (approximation : on ne peut pas
+    # intercepter le clic sur un <a> HTML natif côté serveur Streamlit ; le tracking
+    # précis nécessiterait un composant custom. Pour l'instant le clic ouvre bien le
+    # lien, mais le track_event ne se déclenche pas automatiquement dessus.)
