@@ -1,17 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Facebook, Video, Youtube, Instagram, Send, ExternalLink } from "lucide-react";
-import { CarouselItem } from "../types";
-
-interface CarouselProps {
-  carouselItems: CarouselItem[];
-  onTrackClick: (partnerId: string) => void;
-}
-
-export default function Carousel({ carouselItems, onTrackClick }: CarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Content for each of the 5 social slides
-  const slidesContent = SLIDES = [
+import streamlit as st
+ 
+SLIDES = [
     {
         "id": "facebook",
         "title": "Communauté Facebook Lemuria",
