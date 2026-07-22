@@ -1,588 +1,308 @@
-import React, { useState, useEffect } from "react";
-import { X, Shield, Activity, Save, RefreshCw, Power, Check, Info, TrendingUp, Users, ShoppingBag, ExternalLink, Newspaper } from "lucide-react";
-import { AdminSettings, AnalyticsData, BlogPost } from "../types";
-
-interface AdminDashboardProps {
-  onClose: () => void;
-  onSettingsChange: () => void;
-}
-
-export default function AdminDashboard({ onClose, onSettingsChange }: AdminDashboardProps) {
-  const [settings, setSettings] = useState<AdminSettings | null>(null);
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [successToast, setSuccessToast] = useState(false);
-
-  // Form Fields
-  const [promoCode, setPromoCode] = useState("");
-  const [promoDiscount, setPromoDiscount] = useState("");
-  const [carouselUrls, setCarouselUrls] = useState<{ [key: string]: string }>({});
-  const [partnerToggles, setPartnerToggles] = useState({
-    google_flow: true,
-    pikverse: true,
-    midjourney_flux: true
-  });
-  const [backendInstructions, setBackendInstructions] = useState("");
-  const [ecommerceUrl, setEcommerceUrl] = useState("");
-  const [blogArticles, setBlogArticles] = useState<BlogPost[]>([]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [settingsRes, analyticsRes] = await Promise.all([
-        fetch("/api/admin/settings"),
-        fetch("/api/admin/analytics")
-      ]);
-
-      const settingsData: AdminSettings = await settingsRes.json();
-      const analyticsData: AnalyticsData = await analyticsRes.json();
-
-      setSettings(settingsData);
-      setAnalytics(analyticsData);
-
-      // Populate form fields
-      setPromoCode(settingsData.promoCode);
-      setPromoDiscount(settingsData.promoDiscount);
-      setPartnerToggles(settingsData.partners);
-      setBackendInstructions(settingsData.backendInstructions || "");
-      setEcommerceUrl(settingsData.ecommerceUrl || "");
-      setBlogArticles(settingsData.blogArticles || []);
-      
-      const urls: { [key: string]: string } = {};
-      settingsData.carousel.forEach(item => {
-        urls[item.id] = item.url;
-      });
-      setCarouselUrls(urls);
-
-    } catch (error) {
-      console.error("Error loading admin dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleTogglePartner = async (partnerKey: keyof typeof partnerToggles) => {
-    const updatedToggles = {
-      ...partnerToggles,
-      [partnerKey]: !partnerToggles[partnerKey]
-    };
-    setPartnerToggles(updatedToggles);
-
-    // Auto save toggles for instant action reactivity
-    try {
-      await fetch("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ partners: updatedToggles })
-      });
-      onSettingsChange();
-      triggerToast();
-    } catch (error) {
-      console.error("Error saving partner toggles:", error);
-    }
-  };
-
-  const handleSaveSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!settings) return;
-
-    setSaving(true);
-    
-    // Construct updated carousel array
-    const updatedCarousel = settings.carousel.map(item => ({
-      ...item,
-      url: carouselUrls[item.id] || item.url
-    }));
-
-    try {
-      const res = await fetch("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          promoCode,
-          promoDiscount,
-          carousel: updatedCarousel,
-          partners: partnerToggles,
-          backendInstructions,
-          ecommerceUrl,
-          blogArticles
-        })
-      });
-
-      if (res.ok) {
-        onSettingsChange();
-        triggerToast();
-      }
-    } catch (error) {
-      console.error("Error saving admin settings:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const triggerToast = () => {
-    setSuccessToast(true);
-    setTimeout(() => setSuccessToast(false), 3000);
-  };
-
-  return (
-    <div id="admin-dashboard-overlay" className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-end animate-fade-in">
-      <div 
-        id="admin-dashboard-container"
-        className="w-full max-w-4xl h-full bg-slate-900 border-l border-slate-800 flex flex-col text-slate-100 shadow-2xl p-6 sm:p-8 overflow-y-auto"
-      >
-        
-        {/* Header Dashboard */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-5 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-500 border border-blue-500/20">
-              <Shield className="h-6 w-6" />
+import streamlit as st
+import requests
+ 
+API_BASE = "http://localhost:5000"  # à synchroniser avec streamlit_app.py
+ 
+DEFAULT_PARTNER_TOGGLES = {"google_flow": True, "pikverse": True, "midjourney_flux": True}
+ 
+ 
+def _fetch_admin_data():
+    """Équivalent de fetchData()."""
+    try:
+        settings_res = requests.get(f"{API_BASE}/api/admin/settings", timeout=10)
+        analytics_res = requests.get(f"{API_BASE}/api/admin/analytics", timeout=10)
+        settings_data = settings_res.json() if settings_res.ok else {}
+        analytics_data = analytics_res.json() if analytics_res.ok else {}
+        return settings_data, analytics_data
+    except Exception as e:
+        print(f"Error loading admin dashboard data: {e}")  # équivalent console.error
+        return {}, {}
+ 
+ 
+def _save_settings(payload: dict) -> bool:
+    """Équivalent de la partie POST partagée par handleSaveSettings / handleTogglePartner."""
+    try:
+        res = requests.post(f"{API_BASE}/api/admin/settings", json=payload, timeout=10)
+        return res.ok
+    except Exception as e:
+        print(f"Error saving admin settings: {e}")  # équivalent console.error
+        return False
+ 
+ 
+def render_admin_dashboard(on_close, on_settings_change):
+    """
+    Équivalent de <AdminDashboard onClose onSettingsChange />
+ 
+    Args:
+        on_close: fonction() -> None (doit mettre show_admin à False)
+        on_settings_change: fonction() -> None (équivalent fetchSettings() dans App.tsx)
+    """
+    # Chargement initial (équivalent du useEffect(fetchData, []))
+    if "admin_settings" not in st.session_state or "admin_analytics" not in st.session_state:
+        with st.spinner("Récupération des métriques et configurations..."):
+            settings, analytics = _fetch_admin_data()
+        st.session_state.admin_settings = settings
+        st.session_state.admin_analytics = analytics
+        st.session_state.admin_partner_toggles = settings.get("partners", DEFAULT_PARTNER_TOGGLES)
+        st.session_state.admin_blog_articles = settings.get("blogArticles", [])
+        carousel_urls = {}
+        for item in settings.get("carousel", []):
+            carousel_urls[item["id"]] = item.get("url", "")
+        st.session_state.admin_carousel_urls = carousel_urls
+ 
+    settings = st.session_state.admin_settings
+    analytics = st.session_state.admin_analytics
+ 
+    # Header du dashboard
+    header_col, close_col = st.columns([8, 1])
+    with header_col:
+        st.markdown(
+            """
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="height:48px; width:48px; border-radius:16px; background:rgba(37,99,235,0.10);
+                            color:#3b82f6; border:1px solid rgba(59,130,246,0.20); display:flex;
+                            align-items:center; justify-content:center; font-size:22px;">🛡️</div>
+                <div>
+                    <h1 style="font-size:20px; font-weight:800; margin:0;">Tableau de Bord Administrateur</h1>
+                    <p style="font-size:12px; color:#94a3b8; margin:2px 0 0 0;">
+                        Lemuria Hub IA Madagascar • Masoivoho Panel
+                    </p>
+                </div>
             </div>
-            <div>
-              <h1 className="text-xl font-extrabold tracking-tight">Tableau de Bord Administrateur</h1>
-              <p className="text-xs text-slate-400">Lemuria Hub IA Madagascar • Masoivoho Panel</p>
-            </div>
-          </div>
-          <button 
-            id="close-admin-btn"
-            onClick={onClose}
-            className="rounded-xl p-2 bg-slate-800 hover:bg-slate-700 hover:text-white transition-all text-slate-400"
-            title="Fermer le panel"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Dynamic Success Notification */}
-        {successToast && (
-          <div id="admin-success-toast" className="mb-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-emerald-400 flex items-center gap-3 text-xs sm:text-sm animate-bounce">
-            <Check className="h-5 w-5 flex-shrink-0 bg-emerald-500 text-slate-900 rounded-full p-0.5" />
-            <span><strong>Succès !</strong> Configuration de Lemuria mise à jour en temps réel avec succès.</span>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-3">
-            <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
-            <p className="text-xs text-slate-400">Récupération des métriques et configurations...</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            
-            {/* Row 1: Analytics Counters */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Activity className="h-4 w-4 text-blue-500" />
-                <span>Mesures de Trafic et Conversions (Temps Réel)</span>
-              </h3>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* Stats 1 */}
-                <div id="stat-gen" className="bg-slate-800/40 border border-slate-800 rounded-2xl p-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Générations Totales</span>
-                  <span className="text-2xl font-black text-white mt-1 block">
-                    {(analytics?.metrics.storyboard_gen || 0) + (analytics?.metrics.image_to_prompt || 0) + (analytics?.metrics.pikverse_anim || 0)}
-                  </span>
-                  <span className="text-[9px] text-emerald-400 mt-1 block flex items-center gap-0.5">
-                    <TrendingUp className="h-3 w-3 inline" /> +14% cette semaine
-                  </span>
-                </div>
-                {/* Stats 2 */}
-                <div id="stat-aff-flow" className="bg-slate-800/40 border border-slate-800 rounded-2xl p-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Clics Cible Flow</span>
-                  <span className="text-2xl font-black text-blue-400 mt-1 block">
-                    {analytics?.metrics.affiliate_click_flow || 0}
-                  </span>
-                  <span className="text-[9px] text-slate-400 mt-1 block">Lien ref/flow</span>
-                </div>
-                {/* Stats 3 */}
-                <div id="stat-aff-pik" className="bg-slate-800/40 border border-slate-800 rounded-2xl p-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Clics ref/pikverse</span>
-                  <span className="text-2xl font-black text-purple-400 mt-1 block">
-                    {analytics?.metrics.affiliate_click_pikverse || 0}
-                  </span>
-                  <span className="text-[9px] text-slate-400 mt-1 block">Lien ref/pikverse</span>
-                </div>
-                {/* Stats 4 */}
-                <div id="stat-copie" className="bg-slate-800/40 border border-slate-800 rounded-2xl p-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Prompts Copiés</span>
-                  <span className="text-2xl font-black text-amber-400 mt-1 block">
-                    {analytics?.metrics.prompt_copied || 0}
-                  </span>
-                  <span className="text-[9px] text-slate-400 mt-1 block">Copiés par clipboard</span>
-                </div>
-              </div>
-
-              {/* Boutique specific secondary row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div id="stat-boutique-view" className="bg-slate-800/40 border border-slate-800 rounded-2xl p-3 flex justify-between items-center px-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-400" />
-                    <span className="text-[11px] text-slate-300 font-medium">Vues Boutique</span>
-                  </div>
-                  <span className="text-base font-bold text-slate-200">{analytics?.metrics.boutique_view || 0}</span>
-                </div>
-                <div id="stat-boutique-clicks" className="bg-slate-800/40 border border-slate-800 rounded-2xl p-3 flex justify-between items-center px-4">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-4 w-4 text-slate-400" />
-                    <span className="text-[11px] text-slate-300 font-medium">Clics d'achat pack</span>
-                  </div>
-                  <span className="text-base font-bold text-slate-200">{analytics?.metrics.boutique_buy_click || 0}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: API switches & Promotion Content */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* API Switches Form Card */}
-              <div className="bg-slate-800/30 border border-slate-800 rounded-3xl p-5 space-y-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                  <Power className="h-4 w-4 text-blue-500" />
-                  <span>Statut des API Partenaires</span>
-                </h4>
-                <p className="text-[11px] text-slate-400">
-                  Désactivez temporairement un service partenaire pour basculer automatiquement l'inférence vers le système local de secours.
-                </p>
-
-                <div className="space-y-3 pt-2">
-                  {/* Switch 1 */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <div>
-                      <span className="text-xs font-bold block text-white">Google Flow Beta Router</span>
-                      <span className="text-[10px] text-slate-400">Séquences de storyboards vidéo</span>
-                    </div>
-                    <button
-                      id="toggle-flow-api"
-                      onClick={() => handleTogglePartner("google_flow")}
-                      className={`h-6 w-11 rounded-full relative p-0.5 transition-colors ${partnerToggles.google_flow ? "bg-blue-600" : "bg-slate-700"}`}
-                    >
-                      <span className={`h-5 w-5 bg-white rounded-full block transition-transform ${partnerToggles.google_flow ? "translate-x-5" : "translate-x-0"}`} />
-                    </button>
-                  </div>
-                  
-                  {/* Switch 2 */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <div>
-                      <span className="text-xs font-bold block text-white">PikverseAI Engine</span>
-                      <span className="text-[10px] text-slate-400">Générateur d'animations Pika</span>
-                    </div>
-                    <button
-                      id="toggle-pikverse-api"
-                      onClick={() => handleTogglePartner("pikverse")}
-                      className={`h-6 w-11 rounded-full relative p-0.5 transition-colors ${partnerToggles.pikverse ? "bg-blue-600" : "bg-slate-700"}`}
-                    >
-                      <span className={`h-5 w-5 bg-white rounded-full block transition-transform ${partnerToggles.pikverse ? "translate-x-5" : "translate-x-0"}`} />
-                    </button>
-                  </div>
-
-                  {/* Switch 3 */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <div>
-                      <span className="text-xs font-bold block text-white">Flux / Midjourney Pro Router</span>
-                      <span className="text-[10px] text-slate-400">Traducteur d'image-to-prompt master</span>
-                    </div>
-                    <button
-                      id="toggle-flux-api"
-                      onClick={() => handleTogglePartner("midjourney_flux")}
-                      className={`h-6 w-11 rounded-full relative p-0.5 transition-colors ${partnerToggles.midjourney_flux ? "bg-blue-600" : "bg-slate-700"}`}
-                    >
-                      <span className={`h-5 w-5 bg-white rounded-full block transition-transform ${partnerToggles.midjourney_flux ? "translate-x-5" : "translate-x-0"}`} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Promo Code Form */}
-              <div className="bg-slate-800/30 border border-slate-800 rounded-3xl p-5">
-                <form onSubmit={handleSaveSettings} className="space-y-4">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Save className="h-4 w-4 text-blue-500" />
-                    <span>Contenu Dynamique & Promo</span>
-                  </h4>
-                  <p className="text-[11px] text-slate-400">
-                    Éditez le code promotionnel mensuel qui s'affichera instantanément dans la boutique pour tous les visiteurs.
-                  </p>
-
-                  <div className="space-y-3 pt-1">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Code Promo du Mois</label>
-                      <input
-                        id="admin-promo-code-input"
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2.5 text-xs text-white outline-none focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Avantages & Réduction</label>
-                      <input
-                        id="admin-promo-discount-input"
-                        type="text"
-                        value={promoDiscount}
-                        onChange={(e) => setPromoDiscount(e.target.value)}
-                        className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2.5 text-xs text-white outline-none focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    id="save-promo-settings-btn"
-                    type="submit"
-                    disabled={saving}
-                    className="w-full rounded-xl bg-blue-600 text-xs font-bold py-2.5 hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>{saving ? "Enregistrement..." : "Appliquer les Modifications"}</span>
-                  </button>
-                </form>
-              </div>
-
-            </div>
-
-            {/* Row: Backend Instructions & E-commerce Configuration */}
-            <div className="bg-slate-800/30 border border-slate-800 rounded-3xl p-5">
-              <form onSubmit={handleSaveSettings} className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Shield className="h-4 w-4 text-blue-500" />
-                  <span>Configuration Backend IA & E-commerce</span>
-                </h4>
-                <p className="text-[11px] text-slate-400">
-                  Définissez les instructions de scripts et structures que le modèle IA suivra en tâche de fond, ainsi que le lien externe de redirection de l'onglet E-commerce.
-                </p>
-
-                <div className="space-y-4 pt-1">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Instructions Système / Directives Prompting Backend
-                    </label>
-                    <textarea
-                      id="admin-backend-instructions-input"
-                      rows={3}
-                      value={backendInstructions}
-                      onChange={(e) => setBackendInstructions(e.target.value)}
-                      className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
-                      placeholder="Ex: Vous êtes Lemuria AI, un assistant spécialisé..."
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      URL de redirection E-commerce externe
-                    </label>
-                    <input
-                      id="admin-ecommerce-url-input"
-                      type="url"
-                      value={ecommerceUrl}
-                      onChange={(e) => setEcommerceUrl(e.target.value)}
-                      className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2.5 text-xs text-white font-mono outline-none focus:border-blue-500"
-                      placeholder="https://..."
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-1">
-                  <button
-                    id="save-backend-settings-btn"
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-xl bg-blue-600 text-xs font-bold px-6 py-2.5 hover:bg-blue-700 transition-colors flex items-center gap-1.5"
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>{saving ? "Enregistrement..." : "Appliquer IA & E-commerce"}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Row 3: Edit Carousel URLs */}
-            <div className="bg-slate-800/30 border border-slate-800 rounded-3xl p-5">
-              <form onSubmit={handleSaveSettings} className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <ExternalLink className="h-4 w-4 text-blue-500" />
-                  <span>Gestion des URLs d'affiliation (Carrousel)</span>
-                </h4>
-                <p className="text-[11px] text-slate-400">
-                  Définissez les adresses cibles vers lesquelles les utilisateurs sont redirigés en cliquant sur les 5 slides du carrousel d'accueil.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  {settings?.carousel.map(item => (
-                    <div key={item.id}>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{item.name}</label>
-                      <input
-                        id={`admin-url-${item.id}`}
-                        type="url"
-                        value={carouselUrls[item.id] || ""}
-                        onChange={(e) => setCarouselUrls({ ...carouselUrls, [item.id]: e.target.value })}
-                        className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2.5 text-xs text-white font-mono outline-none focus:border-blue-500"
-                        placeholder="https://..."
-                        required
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    id="save-carousel-settings-btn"
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-xl bg-blue-600 text-xs font-bold px-6 py-2.5 hover:bg-blue-700 transition-colors flex items-center gap-1"
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>{saving ? "Sauvegarde..." : "Enregistrer les Liens"}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Row 4: Edit Blog articles */}
-            <div className="bg-slate-800/30 border border-slate-800 rounded-3xl p-5">
-              <form onSubmit={handleSaveSettings} className="space-y-5">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Newspaper className="h-4 w-4 text-blue-500" />
-                  <span>Gestion du Blog d'Actualité IA & Tech</span>
-                </h4>
-                <p className="text-[11px] text-slate-400">
-                  Modifiez les articles de blog. Chaque article peut avoir son propre titre, description, image d'illustration et lien partenaire d'affiliation externe.
-                </p>
-
-                <div className="space-y-6 pt-1">
-                  {blogArticles.map((article, index) => (
-                    <div key={article.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <span className="text-xs font-bold text-blue-400">Article #{index + 1}</span>
-                        <span className="text-[9px] font-mono text-slate-500">{article.id}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Title input */}
-                        <div className="sm:col-span-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Titre de l'article</label>
-                          <input
-                            type="text"
-                            value={article.title}
-                            onChange={(e) => {
-                              const updated = [...blogArticles];
-                              updated[index] = { ...article, title: e.target.value };
-                              setBlogArticles(updated);
-                            }}
-                            className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2 text-xs text-white outline-none focus:border-blue-500"
-                            required
-                          />
-                        </div>
-
-                        {/* Description input */}
-                        <div className="sm:col-span-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Description / Résumé</label>
-                          <textarea
-                            rows={2}
-                            value={article.description}
-                            onChange={(e) => {
-                              const updated = [...blogArticles];
-                              updated[index] = { ...article, description: e.target.value };
-                              setBlogArticles(updated);
-                            }}
-                            className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2 text-xs text-white outline-none focus:border-blue-500 leading-relaxed"
-                            required
-                          />
-                        </div>
-
-                        {/* Image URL input */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">URL de l'image (Illustration)</label>
-                          <input
-                            type="url"
-                            value={article.imageUrl}
-                            onChange={(e) => {
-                              const updated = [...blogArticles];
-                              updated[index] = { ...article, imageUrl: e.target.value };
-                              setBlogArticles(updated);
-                            }}
-                            className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2 text-xs text-white font-mono outline-none focus:border-blue-500"
-                            placeholder="https://images.unsplash.com/..."
-                            required
-                          />
-                        </div>
-
-                        {/* Partner URL input */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Lien Partenaire (Redirection)</label>
-                          <input
-                            type="url"
-                            value={article.partnerUrl}
-                            onChange={(e) => {
-                              const updated = [...blogArticles];
-                              updated[index] = { ...article, partnerUrl: e.target.value };
-                              setBlogArticles(updated);
-                            }}
-                            className="w-full rounded-xl bg-slate-900 border border-slate-800 p-2 text-xs text-white font-mono outline-none focus:border-blue-500"
-                            placeholder="https://..."
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    id="save-blog-settings-btn"
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-xl bg-blue-600 text-xs font-bold px-6 py-2.5 hover:bg-blue-700 transition-colors flex items-center gap-1"
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>{saving ? "Sauvegarde..." : "Enregistrer les Articles"}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Row 4: Live logs console */}
-            <div className="bg-slate-850/60 border border-slate-800/80 rounded-3xl p-5 space-y-3">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
-                <Activity className="h-4 w-4 text-emerald-500" />
-                <span>Console des Événements Récents (Log Analytics)</span>
-              </h4>
-              
-              <div id="logs-console" className="rounded-2xl border border-slate-800 bg-slate-950 p-4 h-48 overflow-y-auto font-mono text-[10px] text-slate-300 space-y-2">
-                {analytics?.logs.map((log, index) => {
-                  let eventColor = "text-sky-400";
-                  if (log.event_type.includes("click") || log.event_type.includes("buy")) eventColor = "text-yellow-400";
-                  else if (log.event_type === "prompt_copied") eventColor = "text-purple-400";
-
-                  return (
-                    <div key={index} className="flex justify-between hover:bg-slate-900/50 p-1 rounded">
-                      <span className="text-slate-500">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                      <span className={`font-semibold ${eventColor}`}>{log.event_type.toUpperCase()}</span>
-                      <span className="text-blue-400">{log.partner_id.toUpperCase()}</span>
-                      <span className="text-slate-400 truncate max-w-[120px]" title={log.user_id}>{log.user_id}</span>
-                    </div>
-                  );
-                })}
-                {(!analytics?.logs || analytics.logs.length === 0) && (
-                  <p className="text-xs text-slate-500 text-center py-8">Aucun événement enregistré pour le moment.</p>
-                )}
-              </div>
-            </div>
-
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
+            """,
+            unsafe_allow_html=True,
+        )
+    with close_col:
+        if st.button("✕", key="close_admin_btn"):
+            on_close()
+            st.rerun()
+ 
+    st.divider()
+ 
+    # --- Row 1 : Compteurs analytics ---
+    st.markdown("##### 📊 Mesures de Trafic et Conversions (Temps Réel)")
+    metrics = analytics.get("metrics", {})
+    stat_cols = st.columns(4)
+    total_gen = (
+        metrics.get("storyboard_gen", 0)
+        + metrics.get("image_to_prompt", 0)
+        + metrics.get("pikverse_anim", 0)
+    )
+    with stat_cols[0]:
+        st.metric("Générations Totales", total_gen)
+    with stat_cols[1]:
+        st.metric("Clics Cible Flow", metrics.get("affiliate_click_flow", 0))
+    with stat_cols[2]:
+        st.metric("Clics ref/pikverse", metrics.get("affiliate_click_pikverse", 0))
+    with stat_cols[3]:
+        st.metric("Prompts Copiés", metrics.get("prompt_copied", 0))
+ 
+    stat_cols2 = st.columns(2)
+    with stat_cols2[0]:
+        st.metric("👥 Vues Boutique", metrics.get("boutique_view", 0))
+    with stat_cols2[1]:
+        st.metric("🛍️ Clics d'achat pack", metrics.get("boutique_buy_click", 0))
+ 
+    st.divider()
+ 
+    # --- Row 2 : Switches API + Promo ---
+    switches_col, promo_form_col = st.columns(2)
+ 
+    with switches_col:
+        st.markdown("##### ⚡ Statut des API Partenaires")
+        st.caption(
+            "Désactivez temporairement un service partenaire pour basculer automatiquement "
+            "l'inférence vers le système local de secours."
+        )
+        toggles = st.session_state.admin_partner_toggles
+ 
+        partner_labels = {
+            "google_flow": ("Google Flow Beta Router", "Séquences de storyboards vidéo"),
+            "pikverse": ("PikverseAI Engine", "Générateur d'animations Pika"),
+            "midjourney_flux": ("Flux / Midjourney Pro Router", "Traducteur d'image-to-prompt master"),
+        }
+        for key, (label, sublabel) in partner_labels.items():
+            new_val = st.toggle(f"**{label}**  \n:gray[{sublabel}]", value=toggles.get(key, True), key=f"toggle_{key}")
+            if new_val != toggles.get(key, True):
+                toggles[key] = new_val
+                st.session_state.admin_partner_toggles = toggles
+                if _save_settings({"partners": toggles}):
+                    on_settings_change()
+                    st.toast("Configuration mise à jour !", icon="✅")
+                st.rerun()
+ 
+    with promo_form_col:
+        st.markdown("##### 💾 Contenu Dynamique & Promo")
+        st.caption(
+            "Éditez le code promotionnel mensuel qui s'affichera instantanément dans la "
+            "boutique pour tous les visiteurs."
+        )
+        with st.form("promo_form"):
+            promo_code = st.text_input("Code Promo du Mois", value=settings.get("promoCode", "")).upper()
+            promo_discount = st.text_input("Avantages & Réduction", value=settings.get("promoDiscount", ""))
+            if st.form_submit_button("✅ Appliquer les Modifications", use_container_width=True):
+                settings["promoCode"] = promo_code
+                settings["promoDiscount"] = promo_discount
+                if _save_settings(
+                    {
+                        "promoCode": promo_code,
+                        "promoDiscount": promo_discount,
+                        "carousel": settings.get("carousel", []),
+                        "partners": st.session_state.admin_partner_toggles,
+                        "backendInstructions": settings.get("backendInstructions", ""),
+                        "ecommerceUrl": settings.get("ecommerceUrl", ""),
+                        "blogArticles": st.session_state.admin_blog_articles,
+                    }
+                ):
+                    st.session_state.admin_settings = settings
+                    on_settings_change()
+                    st.toast("Configuration mise à jour !", icon="✅")
+ 
+    st.divider()
+ 
+    # --- Row 3 : Backend Instructions & E-commerce ---
+    st.markdown("##### 🛡️ Configuration Backend IA & E-commerce")
+    st.caption(
+        "Définissez les instructions de scripts et structures que le modèle IA suivra en "
+        "tâche de fond, ainsi que le lien externe de redirection de l'onglet E-commerce."
+    )
+    with st.form("backend_ecommerce_form"):
+        backend_instructions = st.text_area(
+            "Instructions Système / Directives Prompting Backend",
+            value=settings.get("backendInstructions", ""),
+            placeholder="Ex: Vous êtes Lemuria AI, un assistant spécialisé...",
+            height=100,
+        )
+        ecommerce_url = st.text_input(
+            "URL de redirection E-commerce externe",
+            value=settings.get("ecommerceUrl", ""),
+            placeholder="https://...",
+        )
+        if st.form_submit_button("✅ Appliquer IA & E-commerce", use_container_width=True):
+            settings["backendInstructions"] = backend_instructions
+            settings["ecommerceUrl"] = ecommerce_url
+            if _save_settings(
+                {
+                    "promoCode": settings.get("promoCode", ""),
+                    "promoDiscount": settings.get("promoDiscount", ""),
+                    "carousel": settings.get("carousel", []),
+                    "partners": st.session_state.admin_partner_toggles,
+                    "backendInstructions": backend_instructions,
+                    "ecommerceUrl": ecommerce_url,
+                    "blogArticles": st.session_state.admin_blog_articles,
+                }
+            ):
+                st.session_state.admin_settings = settings
+                on_settings_change()
+                st.toast("Configuration mise à jour !", icon="✅")
+ 
+    st.divider()
+ 
+    # --- Row 4 : URLs du carrousel ---
+    st.markdown("##### 🔗 Gestion des URLs d'affiliation (Carrousel)")
+    st.caption(
+        "Définissez les adresses cibles vers lesquelles les utilisateurs sont redirigés en "
+        "cliquant sur les 5 slides du carrousel d'accueil."
+    )
+    with st.form("carousel_form"):
+        carousel_urls = st.session_state.admin_carousel_urls
+        for item in settings.get("carousel", []):
+            carousel_urls[item["id"]] = st.text_input(
+                item.get("name", item["id"]),
+                value=carousel_urls.get(item["id"], item.get("url", "")),
+                placeholder="https://...",
+                key=f"carousel_url_{item['id']}",
+            )
+        if st.form_submit_button("✅ Enregistrer les Liens", use_container_width=True):
+            updated_carousel = [
+                {**item, "url": carousel_urls.get(item["id"], item.get("url", ""))}
+                for item in settings.get("carousel", [])
+            ]
+            settings["carousel"] = updated_carousel
+            st.session_state.admin_carousel_urls = carousel_urls
+            if _save_settings(
+                {
+                    "promoCode": settings.get("promoCode", ""),
+                    "promoDiscount": settings.get("promoDiscount", ""),
+                    "carousel": updated_carousel,
+                    "partners": st.session_state.admin_partner_toggles,
+                    "backendInstructions": settings.get("backendInstructions", ""),
+                    "ecommerceUrl": settings.get("ecommerceUrl", ""),
+                    "blogArticles": st.session_state.admin_blog_articles,
+                }
+            ):
+                st.session_state.admin_settings = settings
+                on_settings_change()
+                st.toast("Configuration mise à jour !", icon="✅")
+ 
+    st.divider()
+ 
+    # --- Row 5 : Articles de blog ---
+    st.markdown("##### 📰 Gestion du Blog d'Actualité IA & Tech")
+    st.caption(
+        "Modifiez les articles de blog. Chaque article peut avoir son propre titre, "
+        "description, image d'illustration et lien partenaire d'affiliation externe."
+    )
+    with st.form("blog_form"):
+        blog_articles = st.session_state.admin_blog_articles
+        updated_articles = []
+        for i, article in enumerate(blog_articles):
+            st.markdown(f"**Article #{i + 1}**  \n:gray[{article.get('id', '')}]")
+            title = st.text_input("Titre de l'article", value=article.get("title", ""), key=f"blog_title_{i}")
+            description = st.text_area(
+                "Description / Résumé", value=article.get("description", ""), key=f"blog_desc_{i}", height=70
+            )
+            col_a, col_b = st.columns(2)
+            with col_a:
+                image_url = st.text_input(
+                    "URL de l'image (Illustration)",
+                    value=article.get("imageUrl", ""),
+                    placeholder="https://images.unsplash.com/...",
+                    key=f"blog_img_{i}",
+                )
+            with col_b:
+                partner_url = st.text_input(
+                    "Lien Partenaire (Redirection)",
+                    value=article.get("partnerUrl", ""),
+                    placeholder="https://...",
+                    key=f"blog_partner_{i}",
+                )
+            updated_articles.append(
+                {**article, "title": title, "description": description, "imageUrl": image_url, "partnerUrl": partner_url}
+            )
+            st.markdown("---")
+ 
+        if st.form_submit_button("✅ Enregistrer les Articles", use_container_width=True):
+            st.session_state.admin_blog_articles = updated_articles
+            settings["blogArticles"] = updated_articles
+            if _save_settings(
+                {
+                    "promoCode": settings.get("promoCode", ""),
+                    "promoDiscount": settings.get("promoDiscount", ""),
+                    "carousel": settings.get("carousel", []),
+                    "partners": st.session_state.admin_partner_toggles,
+                    "backendInstructions": settings.get("backendInstructions", ""),
+                    "ecommerceUrl": settings.get("ecommerceUrl", ""),
+                    "blogArticles": updated_articles,
+                }
+            ):
+                st.session_state.admin_settings = settings
+                on_settings_change()
+                st.toast("Configuration mise à jour !", icon="✅")
+ 
+    st.divider()
+ 
+    # --- Row 6 : Console de logs ---
+    st.markdown("##### 📡 Console des Événements Récents (Log Analytics)")
+    logs = analytics.get("logs", [])
+    if logs:
+        log_lines = []
+        for log in logs:
+            event_type = log.get("event_type", "")
+            timestamp = log.get("timestamp", "")
+            partner_id = log.get("partner_id", "")
+            user_id = log.get("user_id", "")
+            log_lines.append(f"{timestamp}  {event_type.upper():<20}  {partner_id.upper():<15}  {user_id}")
+        st.code("\n".join(log_lines), language=None)
+    else:
+        st.caption("Aucun événement enregistré pour le moment.")
